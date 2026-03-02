@@ -1,0 +1,14 @@
+# --- Backend specific ---
+backend/.env
+# This double asterisk '**' means "find __pycache__ anywhere inside backend"
+backend/**/__pycache__/
+backend/.venv/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# --- Frontend specific ---
+# Use the full path from the root
+frontend/learning-assistant/node_modules/
+frontend/learning-assistant/dist/
+frontend/learning-assistant/dist-ssr/
+frontend/learning-assistant/*.local
