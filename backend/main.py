@@ -6,6 +6,8 @@ from config.db import create_tables
 from config.settings import settings
 from contextlib import asynccontextmanager
 
+from routes import authRoutes
+
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -31,6 +33,8 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.add_exception_handler(Exception, global_exception_handler)
+
+app.include_router(authRoutes.router,prefix=settings.API_PREFIX)
 
 @app.get("/")
 def root():

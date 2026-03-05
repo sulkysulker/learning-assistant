@@ -5,7 +5,7 @@ from pydantic import field_validator
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Learning Assistant"
     VERSION: str = "0.1.0"
-
+    API_PREFIX: str = '/api'
     DEBUG: bool = False
 
     DATABASE_URL: str
