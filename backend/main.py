@@ -2,18 +2,27 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from middleware.errorHandler import global_exception_handler
+from config.db import create_tables
+from config.settings import settings
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    create_tables()
+    yield
 
 app = FastAPI(
-    title="Learning Assistant",
+    title=settings.PROJECT_NAME,
     description="API for an AI-based assistant",
-    version="0.1.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    version=settings.VERSION,
+    lifespan=lifespan,
 )
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,7 +30,7 @@ app.add_middleware(
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-app.add_exception_handler(Exception,global_exception_handler)
+app.add_exception_handler(Exception, global_exception_handler)
 
 @app.get("/")
 def root():
