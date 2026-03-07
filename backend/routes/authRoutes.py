@@ -1,8 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,Depends
+from starlette import status
+from typing import Annotated
+from sqlalchemy.orm import Session
 from pydantic import BaseModel,Field,EmailStr,SecretStr,field_validator
+from config.db import get_db
+
+from controllers.authController import register_user
 
 
-class registerVal(BaseModel):
+class registerSchema(BaseModel):
     username : str = Field(...,min_length=3,max_length=12)
     email : EmailStr
     password : SecretStr = Field(...,min_length=6,max_length=12)
@@ -18,10 +24,21 @@ class registerVal(BaseModel):
             raise ValueError("Password must contain a upper letter")
         if not any (c.isdigit() for c in s):
             raise ValueError("Password must contain a number")
-        
-class loginVal(BaseModel):
+
+
+class loginSchema(BaseModel):
     email: EmailStr
     password : SecretStr        
+
+
+class register_response(BaseModel):
+    username: str
+    email : EmailStr
+
+
+
+db_dependency=Annotated[Session,Depends(get_db)]
+
 
 router=APIRouter(
     prefix='/auth',
@@ -30,8 +47,11 @@ router=APIRouter(
 
 # public routes
 
-# @router.post('/register',response_model=registerVal,status_code=201)
-# def user_register(username:str,)
+@router.post('/register',response_model=register_response,status_code=status.HTTP_201_CREATED)
+def create_user(db:db_dependency,new_user:registerSchema):
+    register_user(db,new_user)
+
+
 
 # @router.post('/login',response_model=loginVal)
 
