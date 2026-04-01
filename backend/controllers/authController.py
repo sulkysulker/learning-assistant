@@ -1,10 +1,13 @@
-from routes.authRoutes import registerSchema, db_dependency
 from models.user import User
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from schemas.auth import RegisterSchema
+
 bcrypt_context=CryptContext(schemes=['bcrypt'],deprecated='auto')
 
 
-def register_user(db:db_dependency,new_user:registerSchema):
+def register_user(db: Session, new_user: RegisterSchema) -> User:
     create_user_model=User(
         username=new_user.username,
         email=new_user.email,
@@ -12,7 +15,9 @@ def register_user(db:db_dependency,new_user:registerSchema):
     )
 
     db.add(create_user_model)
-    db.close()
+    db.commit()
+    db.refresh(create_user_model)
+    return create_user_model
 
     
 

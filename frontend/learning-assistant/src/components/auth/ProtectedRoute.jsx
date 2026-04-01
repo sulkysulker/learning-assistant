@@ -1,10 +1,10 @@
 import React from 'react'
 import AppLayout from '../layout/AppLayout';
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const ProtectedRoute = () => {
-  const isAuthenticated = true
-  const loading = false
+  const { isAuthenticated, loading } = useAuth()
 
   if(loading){
     return <div>Loading...</div>;
@@ -12,9 +12,9 @@ const ProtectedRoute = () => {
 
   return isAuthenticated ? (
     <AppLayout>
-      <Outlet></Outlet>
+      <Outlet />
     </AppLayout>
-  ) : <Navigate to='/login' replace></Navigate>
+  ) : <Navigate to='/login' replace />
 }
 
 export default ProtectedRoute
