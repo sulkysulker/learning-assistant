@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator
 
 
@@ -29,3 +31,16 @@ class LoginSchema(BaseModel):
 class RegisterResponse(BaseModel):
     username: str
     email: EmailStr
+
+
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    email: EmailStr
+    created_at: datetime
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse

@@ -12,7 +12,7 @@ import FlashcardPage from './pages/Flashcards/FlashcardPage';
 import QuizTakePage from './pages/Quizzes/QuizTakePage';
 import QuizResultPage from './pages/Quizzes/QuizResultPage';
 import ProfilePage from './pages/Profile/ProfilePage';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from './context/useAuth';
 
 const App = () => {
   const { isAuthenticated, loading } = useAuth()
@@ -32,8 +32,9 @@ const App = () => {
           path="/"
           element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
         />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+        <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
+        <Route path="/register" element={<Navigate to="/signup" replace />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
