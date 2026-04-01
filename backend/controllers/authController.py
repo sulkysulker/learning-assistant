@@ -4,8 +4,11 @@ from sqlalchemy.orm import Session
 
 from schemas.auth import RegisterSchema
 
-bcrypt_context=CryptContext(schemes=['bcrypt'],deprecated='auto')
-
+# bcrypt_context=CryptContext(schemes=['bcrypt'],deprecated='auto')
+bcrypt_context = CryptContext(
+    schemes=["bcrypt_sha256"],
+    deprecated="auto"
+)
 
 def register_user(db: Session, new_user: RegisterSchema) -> User:
     create_user_model=User(
