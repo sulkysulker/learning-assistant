@@ -4,6 +4,7 @@ from typing import Annotated
 from sqlalchemy.orm import Session
 from config.db import get_db
 
+from fastapi.security import OAuth2PasswordRequestForm
 from controllers.authController import login_user, register_user
 from middleware.auth import get_current_user
 from models.user import User
@@ -37,7 +38,8 @@ def create_user(db: db_dependency, new_user: RegisterSchema):
 
 
 @router.post('/login', response_model=AuthResponse, status_code=status.HTTP_200_OK)
-def login(db: db_dependency, credentials: LoginSchema):
+def login(db: db_dependency, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    credentials = LoginSchema(username=form_data.username, password=form_data.password)
     user, token = login_user(db, credentials)
     return {
         "access_token": token,

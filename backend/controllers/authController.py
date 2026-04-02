@@ -46,11 +46,11 @@ def register_user(db: Session, new_user: RegisterSchema) -> tuple[User, str]:
 
 
 def login_user(db: Session, credentials: LoginSchema) -> tuple[User, str]:
-    user = db.query(User).filter(User.email == credentials.email).first()
+    user = db.query(User).filter(User.username == credentials.username).first()
     password = credentials.password.get_secret_value()
 
     if not user or not bcrypt_context.verify(password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        raise HTTPException(status_code=401, detail="Invalid username or password")
 
     token = create_access_token(str(user.id))
     return user, token

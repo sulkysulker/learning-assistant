@@ -24,7 +24,7 @@ class RegisterSchema(BaseModel):
 
 
 class LoginSchema(BaseModel):
-    email: EmailStr
+    username: str
     password: SecretStr
 
 
