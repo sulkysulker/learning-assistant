@@ -6,7 +6,7 @@ import { useAuth } from '../../context/useAuth'
 const LoginPage = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
-  const [formData, setFormData] = useState({ email: '', password: '' })
+  const [formData, setFormData] = useState({ username: '', password: '' })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -39,15 +39,15 @@ const LoginPage = () => {
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
-              Email
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="username">
+              Username
             </label>
             <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={formData.email}
+              id="username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              value={formData.username}
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400"
               required

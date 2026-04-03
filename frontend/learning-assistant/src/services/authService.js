@@ -6,8 +6,16 @@ export const registerUser = async (payload) => {
 	return response.data
 }
 
-export const loginUser = async (payload) => {
-	const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, payload)
+export const loginUser = async ({ username, password }) => {
+	const formData = new URLSearchParams()
+	formData.append('username', username)
+	formData.append('password', password)
+
+	const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, formData, {
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+		},
+	})
 	return response.data
 }
 
