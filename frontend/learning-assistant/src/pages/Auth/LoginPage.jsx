@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../context/useAuth'
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage'
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -24,7 +25,7 @@ const LoginPage = () => {
       await login(formData)
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      const message = err?.response?.data?.detail || 'Unable to log in with these credentials.'
+      const message = getApiErrorMessage(err, 'Unable to log in with these credentials.')
       setError(message)
     } finally {
       setSubmitting(false)
