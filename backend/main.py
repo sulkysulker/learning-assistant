@@ -6,7 +6,12 @@ from config.db import create_tables
 from config.settings import settings
 from contextlib import asynccontextmanager
 
-from routes import authRoutes
+from models.document import Document  # noqa: F401
+from models.flashcard import FlashcardSet  # noqa: F401
+from models.quiz import QuizAttempt  # noqa: F401
+from models.userActivity import UserActivity  # noqa: F401
+
+from routes import authRoutes, dashboardRoutes
 
 
 @asynccontextmanager
@@ -35,6 +40,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.add_exception_handler(Exception, global_exception_handler)
 
 app.include_router(authRoutes.router,prefix=settings.API_PREFIX)
+app.include_router(dashboardRoutes.router,prefix=settings.API_PREFIX)
 
 @app.get("/")
 def root():
