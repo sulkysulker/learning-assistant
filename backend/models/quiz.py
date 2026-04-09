@@ -10,5 +10,6 @@ class QuizAttempt(Base):
 
 	id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
 	user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+	document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), nullable=True, index=True)
 	quiz_title = Column(String, nullable=False)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

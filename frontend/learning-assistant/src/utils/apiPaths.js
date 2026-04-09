@@ -8,4 +8,9 @@ export const API_PATHS = {
 		STATS: '/dashboard/stats',
 		ACTIVITIES: '/dashboard/activities',
 	},
+	DOCUMENTS: {
+		LIST: '/documents',
+		UPLOAD: '/documents/upload',
+		DELETE: (documentId) => `/documents/${documentId}`,
+	},
 }
