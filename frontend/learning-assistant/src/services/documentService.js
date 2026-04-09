@@ -6,6 +6,23 @@ export const getDocuments = async () => {
 	return response.data
 }
 
+export const getDocumentById = async (documentId) => {
+	const response = await axiosInstance.get(API_PATHS.DOCUMENTS.DETAIL(documentId))
+	return response.data
+}
+
+export const getDocumentFileUrl = (documentId) => {
+	const token = localStorage.getItem('token')
+	const baseURL = axiosInstance.defaults.baseURL || ''
+	const filePath = API_PATHS.DOCUMENTS.FILE(documentId)
+
+	if (!token) {
+		return `${baseURL}${filePath}`
+	}
+
+	return `${baseURL}${filePath}?token=${encodeURIComponent(token)}`
+}
+
 export const uploadDocument = async (file, onUploadProgress) => {
 	const formData = new FormData()
 	formData.append('file', file)

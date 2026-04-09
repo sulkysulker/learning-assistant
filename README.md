@@ -65,9 +65,3 @@ All routes are prefixed with `/api`.
 - `GET /api/documents`
 - `POST /api/documents/upload` (multipart form-data, field name: `file`, PDF only)
 - `DELETE /api/documents/{id}`
-
-## Notes
-
-- Uploaded files are stored in `backend/uploads/`.
-- Tables are created on app startup via `create_tables()`.
-- If you changed models on an existing DB, apply a migration or reset the local DB schema.

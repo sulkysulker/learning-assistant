@@ -2,11 +2,13 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from models.document import Document
 from models.flashcard import FlashcardSet
 from models.quiz import QuizAttempt
 from models.user import User
 from models.userActivity import UserActivity
+from pypdf import PdfReader
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -59,6 +61,60 @@ def list_documents(db: Session, current_user: User) -> dict:
 	)
 
 	return {"documents": [_build_document_payload(db, doc) for doc in documents]}
+
+
+def get_document_detail(db: Session, current_user: User, document_id: str) -> dict:
+	try:
+		parsed_document_id = UUID(document_id)
+	except ValueError as exc:
+		raise HTTPException(status_code=400, detail="Invalid document id") from exc
+
+	document = (
+		db.query(Document)
+		.filter(Document.id == parsed_document_id, Document.user_id == current_user.id)
+		.first()
+	)
+
+	if not document:
+		raise HTTPException(status_code=404, detail="Document not found")
+
+	page_count = 0
+	file_path = Path(document.file_path)
+	if file_path.exists():
+		reader = PdfReader(str(file_path))
+		page_count = len(reader.pages)
+
+	payload = _build_document_payload(db, document)
+	payload["page_count"] = int(page_count)
+	payload["file_url"] = f"/api/documents/{document.id}/file"
+	return payload
+
+
+def get_document_file_response(db: Session, current_user: User, document_id: str) -> FileResponse:
+	try:
+		parsed_document_id = UUID(document_id)
+	except ValueError as exc:
+		raise HTTPException(status_code=400, detail="Invalid document id") from exc
+
+	document = (
+		db.query(Document)
+		.filter(Document.id == parsed_document_id, Document.user_id == current_user.id)
+		.first()
+	)
+
+	if not document:
+		raise HTTPException(status_code=404, detail="Document not found")
+
+	file_path = Path(document.file_path)
+	if not file_path.exists():
+		raise HTTPException(status_code=404, detail="File not found")
+
+	return FileResponse(
+		path=str(file_path),
+		media_type="application/pdf",
+		filename=document.filename,
+		headers={"Content-Disposition": f'inline; filename="{document.filename}"'},
+	)
 
 
 def upload_document(db: Session, current_user: User, file: UploadFile) -> dict:

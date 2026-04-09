@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { deleteDocument, getDocuments, uploadDocument } from '../../services/documentService'
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage'
@@ -54,6 +55,8 @@ const formatRelativeDate = (isoDate) => {
 }
 
 const DocumentListPage = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const fileInputRef = useRef(null)
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
@@ -92,6 +95,16 @@ const DocumentListPage = () => {
       mounted = false
     }
   }, [])
+
+  useEffect(() => {
+    const restoreScrollY = location.state?.restoreScrollY
+    if (typeof restoreScrollY === 'number') {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: restoreScrollY, behavior: 'auto' })
+      })
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [location.pathname, location.state, navigate])
 
   const sortedDocuments = useMemo(() => {
     return [...documents].sort((a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime())
@@ -199,17 +212,32 @@ const DocumentListPage = () => {
       {!loading && sortedDocuments.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {sortedDocuments.map((doc) => (
-            <article key={doc.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <article
+              key={doc.id}
+              onClick={() =>
+                navigate(`/documents/${doc.id}`, {
+                  state: {
+                    fromDocuments: true,
+                    scrollY: window.scrollY,
+                    documentName: doc.filename,
+                  },
+                })
+              }
+              className="cursor-pointer rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-orange-200 hover:shadow"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="line-clamp-2 text-base font-semibold text-gray-900">{doc.filename}</h2>
+                  <h2 className="line-clamp-2 text-left text-base font-semibold text-gray-900 hover:text-orange-700">{doc.filename}</h2>
                   <p className="mt-1 text-xs text-gray-500">Uploaded {formatRelativeDate(doc.uploaded_at)}</p>
                 </div>
 
                 <button
                   type="button"
                   disabled={deletingId === doc.id}
-                  onClick={() => handleDelete(doc.id, doc.filename)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    handleDelete(doc.id, doc.filename)
+                  }}
                   className="inline-flex items-center rounded-md border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {deletingId === doc.id ? 'Deleting...' : 'Delete'}
