@@ -1,11 +1,11 @@
 from typing import Annotated
 
 from config.db import get_db
-from controllers.documentController import delete_document, get_document_detail, get_document_file_response, list_documents, upload_document
+from controllers.documentController import chat_with_document, delete_document, get_document_detail, get_document_file_response, list_documents, upload_document
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from middleware.auth import get_current_user, get_user_from_token
 from models.user import User
-from schemas.document import DocumentDeleteResponse, DocumentDetailResponse, DocumentItemResponse, DocumentsListResponse
+from schemas.document import DocumentChatRequest, DocumentChatResponse, DocumentDeleteResponse, DocumentDetailResponse, DocumentItemResponse, DocumentsListResponse
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -55,6 +55,17 @@ def get_document_file(
 		raise HTTPException(status_code=401, detail="Could not validate credentials")
 
 	return get_document_file_response(db, resolved_user, document_id)
+
+
+@router.post("/{document_id}/chat", response_model=DocumentChatResponse, status_code=status.HTTP_200_OK)
+def chat_document(document_id: str, payload: DocumentChatRequest, db: db_dependency, current_user: current_user_dependency):
+	return chat_with_document(
+		db=db,
+		current_user=current_user,
+		document_id=document_id,
+		message=payload.message,
+		history=[item.model_dump() for item in payload.history],
+	)
 
 
 @router.delete("/{document_id}", response_model=DocumentDeleteResponse, status_code=status.HTTP_200_OK)

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
-import { getDocumentById, getDocumentFileUrl } from '../../services/documentService'
+import { chatWithDocument, getDocumentById, getDocumentFileUrl } from '../../services/documentService'
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage'
 
 const TABS = ['Content', 'Chat', 'AI Actions', 'Flashcards', 'Quizzes']
@@ -21,6 +21,10 @@ const DocumentDetailPage = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [jumpPageInput, setJumpPageInput] = useState('1')
   const [zoomPercent, setZoomPercent] = useState(100)
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
+  const [chatError, setChatError] = useState('')
 
   useEffect(() => {
     let mounted = true
@@ -96,6 +100,46 @@ const DocumentDetailPage = () => {
 
   const documentTitle = document?.filename || location.state?.documentName || 'Document'
 
+  const handleSendMessage = async () => {
+    const trimmed = chatInput.trim()
+    if (!trimmed || !documentId || chatLoading) {
+      return
+    }
+
+    const userMessage = { role: 'user', content: trimmed }
+    const nextMessages = [...chatMessages, userMessage]
+    setChatMessages(nextMessages)
+    setChatInput('')
+    setChatLoading(true)
+    setChatError('')
+
+    try {
+      const response = await chatWithDocument(documentId, {
+        message: trimmed,
+        history: nextMessages.map((item) => ({ role: item.role, content: item.content })),
+      })
+
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: response.response || 'No response.' }])
+    } catch (err) {
+      setChatError(getApiErrorMessage(err, 'Failed to get an AI response.'))
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: 'Something went wrong while answering.' }])
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
+  const handleChatKeyDown = async (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      await handleSendMessage()
+    }
+  }
+
+  const handleClearChat = () => {
+    setChatMessages([])
+    setChatError('')
+  }
+
   return (
     <div className="mx-auto max-w-6xl pb-10">
       <button
@@ -135,7 +179,75 @@ const DocumentDetailPage = () => {
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         ) : null}
 
-        {!loading && !error && activeTab !== 'Content' ? (
+        {!loading && !error && activeTab === 'Chat' ? (
+          <div className="flex min-h-[65vh] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+              <p className="text-sm font-semibold text-gray-800">Document Chat</p>
+              <button
+                type="button"
+                onClick={handleClearChat}
+                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+              >
+                Clear chat
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50 p-4">
+              {chatMessages.length === 0 ? (
+                <p className="text-center text-sm text-gray-500">Ask anything about this document.</p>
+              ) : null}
+
+              {chatMessages.map((msg, index) => (
+                <div key={`${msg.role}-${index}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words ${
+                      msg.role === 'user'
+                        ? 'bg-orange-500 text-white'
+                        : 'border border-gray-200 bg-white text-gray-900'
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+
+              {chatLoading ? (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600">
+                    Thinking...
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {chatError ? (
+              <div className="border-t border-red-200 bg-red-50 px-4 py-2 text-xs text-red-700">{chatError}</div>
+            ) : null}
+
+            <div className="border-t border-gray-200 bg-white p-3">
+              <div className="flex items-end gap-2">
+                <textarea
+                  value={chatInput}
+                  onChange={(event) => setChatInput(event.target.value)}
+                  onKeyDown={handleChatKeyDown}
+                  placeholder="Ask a question about this document..."
+                  rows={2}
+                  className="max-h-40 min-h-12 flex-1 resize-y rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-orange-400 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleSendMessage}
+                  disabled={chatLoading || !chatInput.trim()}
+                  className="rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {!loading && !error && !['Content', 'Chat'].includes(activeTab) ? (
           <div className="min-h-[65vh] rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
             <p className="text-base font-semibold text-gray-800">{activeTab}</p>
             <p className="mt-2 text-sm text-gray-600">Coming soon</p>

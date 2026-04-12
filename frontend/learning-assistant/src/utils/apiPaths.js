@@ -13,6 +13,7 @@ export const API_PATHS = {
 		UPLOAD: '/documents/upload',
 		DETAIL: (documentId) => `/documents/${documentId}`,
 		FILE: (documentId) => `/documents/${documentId}/file`,
+		CHAT: (documentId) => `/documents/${documentId}/chat`,
 		DELETE: (documentId) => `/documents/${documentId}`,
 	},
 }

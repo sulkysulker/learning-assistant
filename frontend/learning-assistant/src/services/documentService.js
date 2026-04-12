@@ -41,3 +41,8 @@ export const deleteDocument = async (documentId) => {
 	const response = await axiosInstance.delete(API_PATHS.DOCUMENTS.DELETE(documentId))
 	return response.data
 }
+
+export const chatWithDocument = async (documentId, payload) => {
+	const response = await axiosInstance.post(API_PATHS.DOCUMENTS.CHAT(documentId), payload)
+	return response.data
+}

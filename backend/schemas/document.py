@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DocumentItemResponse(BaseModel):
@@ -24,3 +24,17 @@ class DocumentDetailResponse(DocumentItemResponse):
 class DocumentDeleteResponse(BaseModel):
     message: str
     deleted_document_id: str
+
+
+class DocumentChatHistoryItem(BaseModel):
+    role: str = Field(..., description="user or assistant")
+    content: str = Field(..., min_length=1)
+
+
+class DocumentChatRequest(BaseModel):
+    message: str = Field(..., min_length=1)
+    history: list[DocumentChatHistoryItem] = []
+
+
+class DocumentChatResponse(BaseModel):
+    response: str

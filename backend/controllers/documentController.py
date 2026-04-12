@@ -1,4 +1,6 @@
 from pathlib import Path
+from datetime import datetime, timezone
+import re
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, UploadFile
@@ -11,10 +13,20 @@ from models.userActivity import UserActivity
 from pypdf import PdfReader
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from utils.geminiService import generate_grounded_answer
+from utils.pdfParser import extract_pdf_text
+from utils.textChunker import select_relevant_chunks
 
 
 ALLOWED_PDF_CONTENT_TYPES = {"application/pdf"}
 UPLOADS_DIR = Path("uploads")
+MAX_CONTEXT_CHARS = 30000
+SURROGATE_RE = re.compile(r"[\ud800-\udfff]")
+
+
+def _sanitize_for_db(text: str) -> str:
+	cleaned = SURROGATE_RE.sub("", text or "")
+	return cleaned.encode("utf-8", "ignore").decode("utf-8", "ignore")
 
 
 def _assert_pdf(file: UploadFile) -> None:
@@ -112,9 +124,74 @@ def get_document_file_response(db: Session, current_user: User, document_id: str
 	return FileResponse(
 		path=str(file_path),
 		media_type="application/pdf",
-		filename=document.filename,
-		headers={"Content-Disposition": f'inline; filename="{document.filename}"'},
 	)
+
+
+def chat_with_document(db: Session, current_user: User, document_id: str, message: str, history: list[dict]) -> dict:
+	try:
+		parsed_document_id = UUID(document_id)
+	except ValueError as exc:
+		raise HTTPException(status_code=400, detail="Invalid document id") from exc
+
+	document = (
+		db.query(Document)
+		.filter(Document.id == parsed_document_id, Document.user_id == current_user.id)
+		.first()
+	)
+
+	if not document:
+		raise HTTPException(status_code=404, detail="Document not found")
+
+	if not document.extracted_text:
+		extracted_text = _sanitize_for_db(extract_pdf_text(document.file_path))
+		if not extracted_text:
+			raise HTTPException(status_code=400, detail="Could not extract text from this PDF")
+
+		document.extracted_text = extracted_text
+		document.extracted_text_cached_at = datetime.now(timezone.utc)
+		db.add(document)
+		try:
+			db.commit()
+			db.refresh(document)
+		except Exception:
+			db.rollback()
+			# Continue the chat request without persistent cache if DB write fails.
+			document.extracted_text = extracted_text
+
+	working_text = _sanitize_for_db(document.extracted_text or "")
+
+	if len(working_text.strip()) < 80:
+		raise HTTPException(
+			status_code=400,
+			detail="Not enough extractable text was found in this PDF. It may be image-based/scanned.",
+		)
+
+	relevant_chunks = select_relevant_chunks(working_text, message)
+	context_text = "\n\n---\n\n".join(relevant_chunks)[:MAX_CONTEXT_CHARS]
+	system_prompt = (
+		"You are a document assistant. Answer strictly using ONLY the content provided in the DOCUMENT CONTEXT below. "
+		"If the answer is not present in the context, respond with: 'I could not find that in this document.' "
+		"Do not use outside knowledge, and do not fabricate facts. "
+		"Conversation history is only for conversational continuity and MUST NOT be treated as a source of factual truth.\n\n"
+		f"DOCUMENT CONTEXT:\n{context_text}"
+	)
+
+	try:
+		answer = generate_grounded_answer(system_prompt=system_prompt, history=history[-8:], user_message=message)
+	except ValueError as exc:
+		raise HTTPException(status_code=500, detail=str(exc)) from exc
+	except RuntimeError as exc:
+		error_text = str(exc)
+		if "RESOURCE_EXHAUSTED" in error_text or "quota" in error_text.lower() or "429" in error_text:
+			raise HTTPException(
+				status_code=429,
+				detail="AI quota exceeded for the configured provider. Please check billing/quota, wait for reset, or switch to another model/provider.",
+			) from exc
+		raise HTTPException(status_code=502, detail=f"Failed to get response from AI provider: {error_text}") from exc
+	except Exception as exc:
+		raise HTTPException(status_code=502, detail=f"Failed to get response from AI provider: {exc}") from exc
+
+	return {"response": answer}
 
 
 def upload_document(db: Session, current_user: User, file: UploadFile) -> dict:
