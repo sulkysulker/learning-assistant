@@ -194,6 +194,134 @@ def chat_with_document(db: Session, current_user: User, document_id: str, messag
 	return {"response": answer}
 
 
+def summarize_document(db: Session, current_user: User, document_id: str) -> dict:
+	try:
+		parsed_document_id = UUID(document_id)
+	except ValueError as exc:
+		raise HTTPException(status_code=400, detail="Invalid document id") from exc
+
+	document = (
+		db.query(Document)
+		.filter(Document.id == parsed_document_id, Document.user_id == current_user.id)
+		.first()
+	)
+
+	if not document:
+		raise HTTPException(status_code=404, detail="Document not found")
+
+	if not document.extracted_text:
+		extracted_text = _sanitize_for_db(extract_pdf_text(document.file_path))
+		if not extracted_text:
+			raise HTTPException(status_code=400, detail="Could not extract text from this PDF")
+
+		document.extracted_text = extracted_text
+		document.extracted_text_cached_at = datetime.now(timezone.utc)
+		db.add(document)
+		try:
+			db.commit()
+			db.refresh(document)
+		except Exception:
+			db.rollback()
+			document.extracted_text = extracted_text
+
+	working_text = _sanitize_for_db(document.extracted_text or "")
+
+	if len(working_text.strip()) < 80:
+		raise HTTPException(
+			status_code=400,
+			detail="Not enough extractable text was found in this PDF. It may be image-based/scanned.",
+		)
+
+	context_text = working_text[:MAX_CONTEXT_CHARS]
+	system_prompt = (
+		"You are a document assistant. Produce a concise, structured summary using ONLY the content provided in the DOCUMENT CONTEXT below. "
+		"Return key points as separate lines (one point per line). Do not add additional commentary or outside knowledge.\n\n"
+		f"DOCUMENT CONTEXT:\n{context_text}"
+	)
+
+	try:
+		answer = generate_grounded_answer(system_prompt=system_prompt, history=[], user_message="Summarize the document into key points.")
+	except ValueError as exc:
+		raise HTTPException(status_code=500, detail=str(exc)) from exc
+	except RuntimeError as exc:
+		error_text = str(exc)
+		if "RESOURCE_EXHAUSTED" in error_text or "quota" in error_text.lower() or "429" in error_text:
+			raise HTTPException(
+				status_code=429,
+				detail="AI quota exceeded for the configured provider. Please check billing/quota, wait for reset, or switch to another model/provider.",
+			) from exc
+		raise HTTPException(status_code=502, detail=f"Failed to get response from AI provider: {error_text}") from exc
+	except Exception as exc:
+		raise HTTPException(status_code=502, detail=f"Failed to get response from AI provider: {exc}") from exc
+
+	return {"summary": answer}
+
+
+def explain_concept(db: Session, current_user: User, document_id: str, concept: str) -> dict:
+	try:
+		parsed_document_id = UUID(document_id)
+	except ValueError as exc:
+		raise HTTPException(status_code=400, detail="Invalid document id") from exc
+
+	document = (
+		db.query(Document)
+		.filter(Document.id == parsed_document_id, Document.user_id == current_user.id)
+		.first()
+	)
+
+	if not document:
+		raise HTTPException(status_code=404, detail="Document not found")
+
+	if not document.extracted_text:
+		extracted_text = _sanitize_for_db(extract_pdf_text(document.file_path))
+		if not extracted_text:
+			raise HTTPException(status_code=400, detail="Could not extract text from this PDF")
+
+		document.extracted_text = extracted_text
+		document.extracted_text_cached_at = datetime.now(timezone.utc)
+		db.add(document)
+		try:
+			db.commit()
+			db.refresh(document)
+		except Exception:
+			db.rollback()
+			document.extracted_text = extracted_text
+
+	working_text = _sanitize_for_db(document.extracted_text or "")
+
+	if len(working_text.strip()) < 80:
+		raise HTTPException(
+			status_code=400,
+			detail="Not enough extractable text was found in this PDF. It may be image-based/scanned.",
+		)
+
+	# Select relevant chunks for the concept to keep context small and focused.
+	relevant_chunks = select_relevant_chunks(working_text, concept)
+	context_text = "\n\n---\n\n".join(relevant_chunks)[:MAX_CONTEXT_CHARS]
+	system_prompt = (
+		"You are a document assistant. Explain the requested concept using ONLY the content provided in the DOCUMENT CONTEXT below. "
+		"If the document does not contain an explanation, respond with: 'I could not find that in this document.' Do not use outside knowledge.\n\n"
+		f"DOCUMENT CONTEXT:\n{context_text}"
+	)
+
+	try:
+		answer = generate_grounded_answer(system_prompt=system_prompt, history=[], user_message=f"Explain the concept: {concept}")
+	except ValueError as exc:
+		raise HTTPException(status_code=500, detail=str(exc)) from exc
+	except RuntimeError as exc:
+		error_text = str(exc)
+		if "RESOURCE_EXHAUSTED" in error_text or "quota" in error_text.lower() or "429" in error_text:
+			raise HTTPException(
+				status_code=429,
+				detail="AI quota exceeded for the configured provider. Please check billing/quota, wait for reset, or switch to another model/provider.",
+			) from exc
+		raise HTTPException(status_code=502, detail=f"Failed to get response from AI provider: {error_text}") from exc
+	except Exception as exc:
+		raise HTTPException(status_code=502, detail=f"Failed to get response from AI provider: {exc}") from exc
+
+	return {"explanation": answer}
+
+
 def upload_document(db: Session, current_user: User, file: UploadFile) -> dict:
 	_assert_pdf(file)
 

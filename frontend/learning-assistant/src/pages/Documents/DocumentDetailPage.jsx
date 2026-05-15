@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
-import { chatWithDocument, getDocumentById, getDocumentFileUrl } from '../../services/documentService'
+import { chatWithDocument, getDocumentById, getDocumentFileUrl, summarizeDocument, explainConcept } from '../../services/documentService'
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage'
 
 const TABS = ['Content', 'Chat', 'AI Actions', 'Flashcards', 'Quizzes']
@@ -25,6 +25,15 @@ const DocumentDetailPage = () => {
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [chatError, setChatError] = useState('')
+  const [summary, setSummary] = useState('')
+  const [summaryLoading, setSummaryLoading] = useState(false)
+  const [summaryError, setSummaryError] = useState('')
+  const [hasSummary, setHasSummary] = useState(false)
+  const [conceptInput, setConceptInput] = useState('')
+  const [conceptExplanation, setConceptExplanation] = useState('')
+  const [conceptLoading, setConceptLoading] = useState(false)
+  const [conceptError, setConceptError] = useState('')
+  const [conceptInputError, setConceptInputError] = useState('')
 
   useEffect(() => {
     let mounted = true
@@ -140,6 +149,52 @@ const DocumentDetailPage = () => {
     setChatError('')
   }
 
+  const handleSummarize = async () => {
+    setSummaryLoading(true)
+    setSummaryError('')
+    setSummary('')
+
+    try {
+      const response = await summarizeDocument(documentId)
+      setSummary(response.summary || '')
+      setHasSummary(true)
+    } catch (err) {
+      setSummaryError(getApiErrorMessage(err, 'Failed to generate summary.'))
+    } finally {
+      setSummaryLoading(false)
+    }
+  }
+
+  const handleExplainConcept = async () => {
+    const trimmedConcept = conceptInput.trim()
+    
+    if (!trimmedConcept) {
+      setConceptInputError('Please enter a concept to explain.')
+      return
+    }
+
+    setConceptInputError('')
+    setConceptLoading(true)
+    setConceptError('')
+    setConceptExplanation('')
+
+    try {
+      const response = await explainConcept(documentId, trimmedConcept)
+      setConceptExplanation(response.explanation || '')
+    } catch (err) {
+      setConceptError(getApiErrorMessage(err, 'Failed to explain concept.'))
+    } finally {
+      setConceptLoading(false)
+    }
+  }
+
+  const handleConceptKeyDown = async (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      await handleExplainConcept()
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl pb-10">
       <button
@@ -247,10 +302,107 @@ const DocumentDetailPage = () => {
           </div>
         ) : null}
 
-        {!loading && !error && !['Content', 'Chat'].includes(activeTab) ? (
+        {!loading && !error && !['Content', 'Chat', 'AI Actions'].includes(activeTab) ? (
           <div className="min-h-[65vh] rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
             <p className="text-base font-semibold text-gray-800">{activeTab}</p>
             <p className="mt-2 text-sm text-gray-600">Coming soon</p>
+          </div>
+        ) : null}
+
+        {!loading && !error && activeTab === 'AI Actions' ? (
+          <div className="min-h-[65vh] space-y-6">
+            {/* Summarize Tool */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h2 className="text-lg font-bold text-gray-900">Summarize Document</h2>
+              <p className="mt-1 text-sm text-gray-600">Get a structured summary of the document with key points.</p>
+              
+              <button
+                type="button"
+                onClick={handleSummarize}
+                disabled={summaryLoading}
+                className="mt-4 rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {summaryLoading ? 'Generating...' : hasSummary ? 'Regenerate Summary' : 'Summarize Document'}
+              </button>
+
+              {summaryError ? (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {summaryError}
+                </div>
+              ) : null}
+
+              {summary ? (
+                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <h3 className="font-semibold text-gray-900">Summary</h3>
+                  <ul className="mt-3 space-y-2">
+                    {summary.split('\n').map((point, index) => (
+                      <li key={index} className="flex gap-2 text-sm text-gray-700">
+                        <span className="text-orange-500">•</span>
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Explain Concept Tool */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h2 className="text-lg font-bold text-gray-900">Explain a Concept</h2>
+              <p className="mt-1 text-sm text-gray-600">Enter a concept from this document and get an AI explanation.</p>
+              
+              <div className="mt-4 space-y-2">
+                <input
+                  type="text"
+                  value={conceptInput}
+                  onChange={(event) => {
+                    setConceptInput(event.target.value)
+                    if (conceptInputError) {
+                      setConceptInputError('')
+                    }
+                  }}
+                  onKeyDown={handleConceptKeyDown}
+                  placeholder="Enter a concept from this document..."
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-orange-400 focus:outline-none"
+                />
+                {conceptInputError ? (
+                  <p className="text-xs text-red-700">{conceptInputError}</p>
+                ) : null}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleExplainConcept}
+                disabled={conceptLoading}
+                className="mt-3 rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {conceptLoading ? 'Explaining...' : 'Explain'}
+              </button>
+
+              {conceptError ? (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {conceptError}
+                </div>
+              ) : null}
+
+              {conceptExplanation ? (
+                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <h3 className="font-semibold text-gray-900">Explanation</h3>
+                  <p className="mt-2 whitespace-pre-wrap break-words text-sm text-gray-700">{conceptExplanation}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConceptInput('')
+                      setConceptExplanation('')
+                      setConceptInputError('')
+                    }}
+                    className="mt-3 text-xs font-semibold text-orange-600 hover:text-orange-700"
+                  >
+                    Clear &amp; try another
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : null}
 

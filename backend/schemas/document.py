@@ -38,3 +38,15 @@ class DocumentChatRequest(BaseModel):
 
 class DocumentChatResponse(BaseModel):
     response: str
+
+
+class DocumentSummarizeResponse(BaseModel):
+    summary: str
+
+
+class DocumentExplainRequest(BaseModel):
+    concept: str = Field(..., min_length=1)
+
+
+class DocumentExplainResponse(BaseModel):
+    explanation: str

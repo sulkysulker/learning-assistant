@@ -14,6 +14,8 @@ export const API_PATHS = {
 		DETAIL: (documentId) => `/documents/${documentId}`,
 		FILE: (documentId) => `/documents/${documentId}/file`,
 		CHAT: (documentId) => `/documents/${documentId}/chat`,
+		SUMMARIZE: (documentId) => `/documents/${documentId}/summarize`,
+		EXPLAIN_CONCEPT: (documentId) => `/documents/${documentId}/explain-concept`,
 		DELETE: (documentId) => `/documents/${documentId}`,
 	},
 }

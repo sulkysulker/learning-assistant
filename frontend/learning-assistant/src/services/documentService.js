@@ -46,3 +46,13 @@ export const chatWithDocument = async (documentId, payload) => {
 	const response = await axiosInstance.post(API_PATHS.DOCUMENTS.CHAT(documentId), payload)
 	return response.data
 }
+
+export const summarizeDocument = async (documentId) => {
+	const response = await axiosInstance.post(API_PATHS.DOCUMENTS.SUMMARIZE(documentId))
+	return response.data
+}
+
+export const explainConcept = async (documentId, concept) => {
+	const response = await axiosInstance.post(API_PATHS.DOCUMENTS.EXPLAIN_CONCEPT(documentId), { concept })
+	return response.data
+}
