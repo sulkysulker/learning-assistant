@@ -7,11 +7,11 @@ from config.settings import settings
 from contextlib import asynccontextmanager
 
 from models.document import Document  # noqa: F401
-from models.flashcard import FlashcardSet  # noqa: F401
+from models.flashcard import Flashcard, FlashcardSet  # noqa: F401
 from models.quiz import QuizAttempt  # noqa: F401
 from models.userActivity import UserActivity  # noqa: F401
 
-from routes import authRoutes, dashboardRoutes, documentRoutes
+from routes import authRoutes, dashboardRoutes, documentRoutes, flashcardRoutes
 
 
 @asynccontextmanager
@@ -42,6 +42,8 @@ app.add_exception_handler(Exception, global_exception_handler)
 app.include_router(authRoutes.router,prefix=settings.API_PREFIX)
 app.include_router(dashboardRoutes.router,prefix=settings.API_PREFIX)
 app.include_router(documentRoutes.router,prefix=settings.API_PREFIX)
+app.include_router(flashcardRoutes.router,prefix=settings.API_PREFIX)
+app.include_router(flashcardRoutes.set_router,prefix=settings.API_PREFIX)
 
 @app.get("/")
 def root():

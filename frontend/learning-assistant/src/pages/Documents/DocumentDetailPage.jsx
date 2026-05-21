@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { chatWithDocument, getDocumentById, getDocumentFileUrl, summarizeDocument, explainConcept } from '../../services/documentService'
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage'
+import FlashcardPage from '../Flashcards/FlashcardPage'
 
 const TABS = ['Content', 'Chat', 'AI Actions', 'Flashcards', 'Quizzes']
 
@@ -302,7 +303,11 @@ const DocumentDetailPage = () => {
           </div>
         ) : null}
 
-        {!loading && !error && !['Content', 'Chat', 'AI Actions'].includes(activeTab) ? (
+        {!loading && !error && activeTab === 'Flashcards' ? (
+          <FlashcardPage documentId={documentId} documentTitle={documentTitle} embedded />
+        ) : null}
+
+        {!loading && !error && !['Content', 'Chat', 'AI Actions', 'Flashcards'].includes(activeTab) ? (
           <div className="min-h-[65vh] rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
             <p className="text-base font-semibold text-gray-800">{activeTab}</p>
             <p className="mt-2 text-sm text-gray-600">Coming soon</p>
