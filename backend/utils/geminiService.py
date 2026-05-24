@@ -148,3 +148,30 @@ def generate_flashcards(document_title: str, document_context: str, count: int) 
 		raise ValueError("AI flashcard response must be a JSON array")
 
 	return data[:count]
+
+
+def generate_quiz_questions(document_title: str, document_context: str, count: int) -> list[dict]:
+	if count < 1:
+		raise ValueError("Quiz question count must be at least 1")
+
+	prompt = (
+		"You are generating a multiple choice quiz from a document. Create questions that test comprehension and recall. "
+		"Use only the document context below. Return ONLY valid JSON. No markdown, no code fences, no commentary.\n\n"
+		f"Document title: {document_title}\n"
+		f"Requested questions: {count}\n\n"
+		"Return an array of objects with exactly these keys: question, options, correct_index, explanation. "
+		"Each options value must be an array of exactly four distinct answer choices. correct_index must be an integer from 0 to 3. "
+		"The explanation must briefly justify the correct answer and should stay grounded in the document.\n\n"
+		f"DOCUMENT CONTEXT:\n{document_context}"
+	)
+
+	text = _generate_prompt(prompt)
+	data = _extract_json_payload(text)
+
+	if isinstance(data, dict) and "questions" in data:
+		data = data["questions"]
+
+	if not isinstance(data, list):
+		raise ValueError("AI quiz response must be a JSON array")
+
+	return data[:count]

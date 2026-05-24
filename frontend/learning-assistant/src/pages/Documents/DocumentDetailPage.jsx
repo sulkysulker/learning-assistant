@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { chatWithDocument, getDocumentById, getDocumentFileUrl, summarizeDocument, explainConcept } from '../../services/documentService'
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage'
 import FlashcardPage from '../Flashcards/FlashcardPage'
+import DocumentQuizzesPanel from '../Quizzes/DocumentQuizzesPanel'
 
 const TABS = ['Content', 'Chat', 'AI Actions', 'Flashcards', 'Quizzes']
 
@@ -15,7 +16,7 @@ const DocumentDetailPage = () => {
   const location = useLocation()
   const { id: documentId } = useParams()
 
-  const [activeTab, setActiveTab] = useState('Content')
+  const [activeTab, setActiveTab] = useState(() => location.state?.activeTab || 'Content')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [document, setDocument] = useState(null)
@@ -307,7 +308,11 @@ const DocumentDetailPage = () => {
           <FlashcardPage documentId={documentId} documentTitle={documentTitle} embedded />
         ) : null}
 
-        {!loading && !error && !['Content', 'Chat', 'AI Actions', 'Flashcards'].includes(activeTab) ? (
+        {!loading && !error && activeTab === 'Quizzes' ? (
+          <DocumentQuizzesPanel documentId={documentId} documentTitle={documentTitle} />
+        ) : null}
+
+        {!loading && !error && !['Content', 'Chat', 'AI Actions', 'Flashcards', 'Quizzes'].includes(activeTab) ? (
           <div className="min-h-[65vh] rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
             <p className="text-base font-semibold text-gray-800">{activeTab}</p>
             <p className="mt-2 text-sm text-gray-600">Coming soon</p>

@@ -7,7 +7,7 @@ from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from models.document import Document
 from models.flashcard import FlashcardSet
-from models.quiz import QuizAttempt
+from models.quiz import Quiz, QuizAttempt, QuizQuestion
 from models.user import User
 from models.userActivity import UserActivity
 from pypdf import PdfReader
@@ -48,8 +48,8 @@ def _build_document_payload(db: Session, document: Document) -> dict:
 		or 0
 	)
 	quizzes_count = (
-		db.query(func.count(QuizAttempt.id))
-		.filter(QuizAttempt.user_id == document.user_id, QuizAttempt.document_id == document.id)
+		db.query(func.count(Quiz.id))
+		.filter(Quiz.user_id == document.user_id, Quiz.document_id == document.id)
 		.scalar()
 		or 0
 	)
@@ -391,7 +391,18 @@ def delete_document(db: Session, current_user: User, document_id: str) -> dict:
 	).delete(synchronize_session=False)
 	db.query(QuizAttempt).filter(
 		QuizAttempt.user_id == current_user.id,
-		QuizAttempt.document_id == parsed_document_id,
+		QuizAttempt.quiz_id.in_(
+			[row[0] for row in db.query(Quiz.id).filter(Quiz.user_id == current_user.id, Quiz.document_id == parsed_document_id).all()]
+		),
+	).delete(synchronize_session=False)
+	db.query(QuizQuestion).filter(
+		QuizQuestion.quiz_id.in_(
+			[row[0] for row in db.query(Quiz.id).filter(Quiz.user_id == current_user.id, Quiz.document_id == parsed_document_id).all()]
+		)
+	).delete(synchronize_session=False)
+	db.query(Quiz).filter(
+		Quiz.user_id == current_user.id,
+		Quiz.document_id == parsed_document_id,
 	).delete(synchronize_session=False)
 	db.query(UserActivity).filter(
 		UserActivity.user_id == current_user.id,
