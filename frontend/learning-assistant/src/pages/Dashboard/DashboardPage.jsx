@@ -96,16 +96,29 @@ const ActivityIcon = ({ type }) => {
   )
 }
 
-const getViewPath = (activity) => {
+const getViewDestination = (activity) => {
   if (activity.related_type === 'quiz') {
-    return `/quizzes/${activity.related_id}`
+    if (activity.activity_type === 'created quiz') {
+      return {
+        path: `/documents/${activity.related_id}`,
+        state: { activeTab: 'Quizzes' },
+      }
+    }
+
+    return {
+      path: `/quizzes/${activity.related_id}`,
+    }
   }
 
   if (activity.related_type === 'flashcard_set') {
-    return `/documents/${activity.related_id}/flashcards`
+    return {
+      path: `/documents/${activity.related_id}/flashcards`,
+    }
   }
 
-  return `/documents/${activity.related_id}`
+  return {
+    path: `/documents/${activity.related_id}`,
+  }
 }
 
 const DashboardPage = () => {
@@ -229,7 +242,10 @@ const DashboardPage = () => {
 
                     <button
                       type="button"
-                      onClick={() => navigate(getViewPath(activity))}
+                      onClick={() => {
+                        const destination = getViewDestination(activity)
+                        navigate(destination.path, { state: destination.state })
+                      }}
                       className="inline-flex items-center justify-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
                     >
                       View
