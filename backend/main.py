@@ -7,7 +7,7 @@ from config.settings import settings
 from contextlib import asynccontextmanager
 
 from models.document import Document  # noqa: F401
-from models.flashcard import Flashcard, FlashcardSet  # noqa: F401
+from models.flashcard import Flashcard, FlashcardReview, FlashcardSet  # noqa: F401
 from models.quiz import Quiz, QuizAttempt, QuizQuestion  # noqa: F401
 from models.userActivity import UserActivity  # noqa: F401
 
@@ -43,6 +43,7 @@ app.include_router(authRoutes.router,prefix=settings.API_PREFIX)
 app.include_router(dashboardRoutes.router,prefix=settings.API_PREFIX)
 app.include_router(documentRoutes.router,prefix=settings.API_PREFIX)
 app.include_router(flashcardRoutes.router,prefix=settings.API_PREFIX)
+app.include_router(flashcardRoutes.flashcards_router,prefix=settings.API_PREFIX)
 app.include_router(flashcardRoutes.set_router,prefix=settings.API_PREFIX)
 app.include_router(quizRoutes.router,prefix=settings.API_PREFIX)
 app.include_router(quizRoutes.quiz_router,prefix=settings.API_PREFIX)

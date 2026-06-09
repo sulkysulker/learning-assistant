@@ -13,6 +13,7 @@ class FlashcardSetSummaryResponse(BaseModel):
 	name: str
 	created_at: datetime
 	cards_count: int
+	reviewed_cards_count: int
 
 
 class FlashcardSetsListResponse(BaseModel):
@@ -26,6 +27,7 @@ class FlashcardSetOverviewResponse(BaseModel):
 	name: str
 	created_at: datetime
 	cards_count: int
+	reviewed_cards_count: int
 
 
 class FlashcardSetOverviewsResponse(BaseModel):
@@ -43,9 +45,12 @@ class FlashcardCardResponse(BaseModel):
 class FlashcardSetDetailResponse(BaseModel):
 	id: str
 	document_id: str
+	document_name: str | None = None
 	name: str
 	created_at: datetime
 	cards: list[FlashcardCardResponse]
+	reviewed_card_ids: list[str] = Field(default_factory=list)
+	reviewed_cards_count: int = 0
 
 
 class FlashcardSetDeleteResponse(BaseModel):
@@ -57,3 +62,11 @@ class FlashcardToggleStarResponse(BaseModel):
 	id: str
 	set_id: str
 	is_starred: bool
+
+
+class FlashcardReviewResponse(BaseModel):
+	flashcard_id: str
+	set_id: str
+	reviewed_at: datetime
+	reviewed_cards_count: int
+	cards_count: int

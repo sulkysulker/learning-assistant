@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
+import FlashcardViewer from '../../components/flashcards/FlashcardViewer'
 import {
   deleteFlashcardSet,
   generateDocumentFlashcards,
@@ -214,6 +215,7 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
         name: response.name,
         created_at: response.created_at,
         cards_count: Array.isArray(response.cards) ? response.cards.length : 0,
+        reviewed_cards_count: 0,
       }
 
       setSets((prevSets) => [newSetSummary, ...prevSets])
@@ -227,11 +229,6 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
 
 
   const handleDeleteSet = async (setId) => {
-    const confirmed = window.confirm('Delete this flashcard set? This cannot be undone.')
-    if (!confirmed) {
-      return
-    }
-
     setActionError('')
 
     try {
@@ -244,6 +241,37 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
     } catch (err) {
       setActionError(getApiErrorMessage(err, 'Failed to delete flashcard set.'))
     }
+  }
+
+
+  const handleReviewedCard = (response) => {
+    if (!response?.set_id) {
+      return
+    }
+
+    setSelectedSet((prevSet) => {
+      if (!prevSet || prevSet.id !== response.set_id) {
+        return prevSet
+      }
+
+      return {
+        ...prevSet,
+        reviewed_cards_count: Number(response.reviewed_cards_count || 0),
+        reviewed_card_ids: Array.from(new Set([...(prevSet.reviewed_card_ids || []), response.flashcard_id])),
+      }
+    })
+
+    setSets((prevSets) =>
+      prevSets.map((item) =>
+        item.id === response.set_id
+          ? {
+              ...item,
+              reviewed_cards_count: Number(response.reviewed_cards_count || 0),
+              cards_count: Number(response.cards_count || item.cards_count || 0),
+            }
+          : item
+      )
+    )
   }
 
 
@@ -339,7 +367,10 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation()
-                    handleDeleteSet(setItem.id)
+                    const confirmed = window.confirm('Delete this flashcard set? This cannot be undone.')
+                    if (confirmed) {
+                      handleDeleteSet(setItem.id)
+                    }
                   }}
                   className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                 >
@@ -488,9 +519,15 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
     <p className="text-sm text-gray-500">Loading flashcards...</p>
   ) : selectedSetError ? (
     <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{selectedSetError}</div>
-  ) : (
-    viewerContent
-  )
+  ) : selectedSet ? (
+    <FlashcardViewer
+      flashcardSet={selectedSet}
+      onBack={handleBackToSets}
+      backLabel="Back to document sets"
+      onDeleteSet={handleDeleteSet}
+      onReviewed={handleReviewedCard}
+    />
+  ) : null
 
   if (embedded) {
     return (

@@ -7,6 +7,7 @@ from controllers.flashcardController import (
 	get_flashcard_set_detail,
 	list_flashcard_sets,
 	list_user_flashcard_sets,
+	mark_flashcard_reviewed,
 	toggle_flashcard_star,
 )
 from fastapi import APIRouter, Depends
@@ -18,6 +19,7 @@ from schemas.flashcard import (
 	FlashcardSetGenerateRequest,
 	FlashcardSetOverviewsResponse,
 	FlashcardSetsListResponse,
+	FlashcardReviewResponse,
 	FlashcardToggleStarResponse,
 )
 from sqlalchemy.orm import Session
@@ -30,11 +32,21 @@ current_user_dependency = Annotated[User, Depends(get_current_user)]
 
 router = APIRouter(prefix="/documents", tags=["flashcards"])
 set_router = APIRouter(prefix="/flashcard-sets", tags=["flashcards"])
+flashcards_router = APIRouter(prefix="/flashcards", tags=["flashcards"])
 
 
-@set_router.get("", response_model=FlashcardSetOverviewsResponse, status_code=status.HTTP_200_OK)
+@flashcards_router.get("", response_model=FlashcardSetOverviewsResponse, status_code=status.HTTP_200_OK)
 def get_user_flashcard_sets(db: db_dependency, current_user: current_user_dependency):
 	return list_user_flashcard_sets(db, current_user)
+
+
+@flashcards_router.patch(
+	"/{card_id}/reviewed",
+	response_model=FlashcardReviewResponse,
+	status_code=status.HTTP_200_OK,
+)
+def review_flashcard(card_id: str, db: db_dependency, current_user: current_user_dependency):
+	return mark_flashcard_reviewed(db, current_user, card_id)
 
 
 @router.get("/{document_id}/flashcards", response_model=FlashcardSetsListResponse, status_code=status.HTTP_200_OK)

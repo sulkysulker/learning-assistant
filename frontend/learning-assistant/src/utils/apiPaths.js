@@ -23,7 +23,8 @@ export const API_PATHS = {
 		DELETE: (documentId) => `/documents/${documentId}`,
 	},
 	FLASHCARDS: {
-		LIST: '/flashcard-sets',
+		LIST: '/flashcards',
+		REVIEWED: (cardId) => `/flashcards/${cardId}/reviewed`,
 		DETAIL: (setId) => `/flashcard-sets/${setId}`,
 		DELETE: (setId) => `/flashcard-sets/${setId}`,
 		TOGGLE_STAR: (setId, cardId) => `/flashcard-sets/${setId}/cards/${cardId}/star`,

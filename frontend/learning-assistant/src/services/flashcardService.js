@@ -14,6 +14,12 @@ export const getUserFlashcardSets = async () => {
 }
 
 
+export const markFlashcardReviewed = async (cardId) => {
+	const response = await axiosInstance.patch(API_PATHS.FLASHCARDS.REVIEWED(cardId))
+	return response.data
+}
+
+
 export const generateDocumentFlashcards = async (documentId, count = 10) => {
 	const response = await axiosInstance.post(API_PATHS.DOCUMENTS.FLASHCARDS_GENERATE(documentId), { count })
 	return response.data
