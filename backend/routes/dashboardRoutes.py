@@ -13,7 +13,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from starlette import status
 
-
 db_dependency = Annotated[Session, Depends(get_db)]
 current_user_dependency = Annotated[User, Depends(get_current_user)]
 

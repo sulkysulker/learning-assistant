@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import re
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -13,7 +13,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from utils.geminiService import generate_flashcards
 from utils.pdfParser import extract_pdf_text
-
 
 SURROGATE_RE = re.compile(r"[\ud800-\udfff]")
 VALID_DIFFICULTIES = {"easy", "medium", "hard"}
@@ -57,7 +56,7 @@ def _ensure_document_text(db: Session, document: Document) -> str:
 		try:
 			db.commit()
 			db.refresh(document)
-		except Exception:
+		except Exception:  # noqa: BLE001
 			db.rollback()
 			document.extracted_text = extracted_text
 

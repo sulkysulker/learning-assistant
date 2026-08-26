@@ -1,6 +1,6 @@
-from pathlib import Path
-from datetime import datetime, timezone
 import re
+from datetime import datetime, timezone
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, UploadFile
@@ -16,7 +16,6 @@ from sqlalchemy.orm import Session
 from utils.geminiService import generate_grounded_answer
 from utils.pdfParser import extract_pdf_text
 from utils.textChunker import select_relevant_chunks
-
 
 ALLOWED_PDF_CONTENT_TYPES = {"application/pdf"}
 UPLOADS_DIR = Path("uploads")
@@ -153,7 +152,7 @@ def chat_with_document(db: Session, current_user: User, document_id: str, messag
 		try:
 			db.commit()
 			db.refresh(document)
-		except Exception:
+		except Exception:  # noqa: BLE001
 			db.rollback()
 			# Continue the chat request without persistent cache if DB write fails.
 			document.extracted_text = extracted_text
@@ -220,7 +219,7 @@ def summarize_document(db: Session, current_user: User, document_id: str) -> dic
 		try:
 			db.commit()
 			db.refresh(document)
-		except Exception:
+		except Exception:  # noqa: BLE001
 			db.rollback()
 			document.extracted_text = extracted_text
 
@@ -283,7 +282,7 @@ def explain_concept(db: Session, current_user: User, document_id: str, concept: 
 		try:
 			db.commit()
 			db.refresh(document)
-		except Exception:
+		except Exception:  # noqa: BLE001
 			db.rollback()
 			document.extracted_text = extracted_text
 

@@ -1,15 +1,14 @@
-from fastapi import APIRouter, Depends
-from starlette import status
 from typing import Annotated
-from sqlalchemy.orm import Session
-from config.db import get_db
 
-from fastapi.security import OAuth2PasswordRequestForm
+from config.db import get_db
 from controllers.authController import login_user, register_user
+from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from middleware.auth import get_current_user
 from models.user import User
 from schemas.auth import AuthResponse, LoginSchema, RegisterSchema, UserResponse
-
+from sqlalchemy.orm import Session
+from starlette import status
 
 db_dependency=Annotated[Session,Depends(get_db)]
 current_user_dependency = Annotated[User, Depends(get_current_user)]

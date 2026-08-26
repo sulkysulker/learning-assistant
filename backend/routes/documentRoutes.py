@@ -4,12 +4,12 @@ from config.db import get_db
 from controllers.documentController import (
 	chat_with_document,
 	delete_document,
+	explain_concept,
 	get_document_detail,
 	get_document_file_response,
 	list_documents,
-	upload_document,
 	summarize_document,
-	explain_concept,
+	upload_document,
 )
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from middleware.auth import get_current_user, get_user_from_token
@@ -19,15 +19,14 @@ from schemas.document import (
 	DocumentChatResponse,
 	DocumentDeleteResponse,
 	DocumentDetailResponse,
+	DocumentExplainRequest,
+	DocumentExplainResponse,
 	DocumentItemResponse,
 	DocumentsListResponse,
 	DocumentSummarizeResponse,
-	DocumentExplainRequest,
-	DocumentExplainResponse,
 )
 from sqlalchemy.orm import Session
 from starlette import status
-
 
 db_dependency = Annotated[Session, Depends(get_db)]
 current_user_dependency = Annotated[User, Depends(get_current_user)]
@@ -45,7 +44,7 @@ def get_documents(db: db_dependency, current_user: current_user_dependency):
 def upload_document_file(
 	db: db_dependency,
 	current_user: current_user_dependency,
-	file: UploadFile = File(...),
+	file: UploadFile = File(...),  # noqa: B008
 ):
 	return upload_document(db, current_user, file)
 

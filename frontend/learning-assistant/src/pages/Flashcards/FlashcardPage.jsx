@@ -7,16 +7,8 @@ import {
   generateDocumentFlashcards,
   getDocumentFlashcardSets,
   getFlashcardSet,
-  toggleFlashcardStar,
 } from '../../services/flashcardService'
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage'
-
-
-const DIFFICULTY_STYLES = {
-  easy: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  medium: 'bg-amber-100 text-amber-700 border-amber-200',
-  hard: 'bg-rose-100 text-rose-700 border-rose-200',
-}
 
 
 const formatDate = (value) => {
@@ -29,15 +21,6 @@ const formatDate = (value) => {
     day: 'numeric',
     year: 'numeric',
   }).format(new Date(value))
-}
-
-
-const formatDifficulty = (value) => {
-  if (!value) {
-    return 'Medium'
-  }
-
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 
@@ -57,15 +40,6 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
   const [selectedSetError, setSelectedSetError] = useState('')
   const [generating, setGenerating] = useState(false)
   const [actionError, setActionError] = useState('')
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isFlipped, setIsFlipped] = useState(false)
-  const [autoAdvance, setAutoAdvance] = useState(true)
-  const [starLoadingCardId, setStarLoadingCardId] = useState('')
-
-
-  const selectedCards = selectedSet?.cards || []
-  const currentCard = selectedCards[currentIndex] || null
-  const totalCards = selectedCards.length
   const isViewingSet = Boolean(selectedSetId || selectedSet || selectedSetLoading || selectedSetError)
 
 
@@ -128,8 +102,6 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
         }
 
         setSelectedSet(response)
-        setCurrentIndex(0)
-        setIsFlipped(false)
       } catch (err) {
         if (mounted) {
           setSelectedSet(null)
@@ -148,46 +120,6 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
       mounted = false
     }
   }, [selectedSetId])
-
-
-  useEffect(() => {
-    setCurrentIndex(0)
-    setIsFlipped(false)
-  }, [selectedSetId, selectedSet?.cards?.length])
-
-
-  useEffect(() => {
-    if (!autoAdvance || !isFlipped || totalCards < 2) {
-      return undefined
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % totalCards)
-      setIsFlipped(false)
-    }, 1800)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [autoAdvance, isFlipped, totalCards, currentIndex])
-
-
-  const goToPreviousCard = () => {
-    if (!totalCards) {
-      return
-    }
-
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + totalCards) % totalCards)
-    setIsFlipped(false)
-  }
-
-
-  const goToNextCard = () => {
-    if (!totalCards) {
-      return
-    }
-
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % totalCards)
-    setIsFlipped(false)
-  }
 
 
   const handleSelectSet = (setId) => {
@@ -272,46 +204,6 @@ const FlashcardPage = ({ documentId: documentIdProp, documentTitle: documentTitl
           : item
       )
     )
-  }
-
-
-  const handleToggleStar = async (card) => {
-    if (!selectedSet || !card || starLoadingCardId) {
-      return
-    }
-
-    setStarLoadingCardId(card.id)
-    setActionError('')
-
-    try {
-      const response = await toggleFlashcardStar(selectedSet.id, card.id)
-      setSelectedSet((prevSet) => {
-        if (!prevSet) {
-          return prevSet
-        }
-
-        return {
-          ...prevSet,
-          cards: prevSet.cards.map((item) =>
-            item.id === card.id ? { ...item, is_starred: response.is_starred } : item
-          ),
-        }
-      })
-      setSets((prevSets) =>
-        prevSets.map((item) =>
-          item.id === selectedSet.id
-            ? {
-                ...item,
-                cards_count: selectedSet.cards.length,
-              }
-            : item
-        )
-      )
-    } catch (err) {
-      setActionError(getApiErrorMessage(err, 'Failed to update star status.'))
-    } finally {
-      setStarLoadingCardId('')
-    }
   }
 
 

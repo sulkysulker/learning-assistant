@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field, EmailStr, SecretStr, field_validator
+# ruff: noqa: N999
+
+from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator
 
 
 class registerSchema(BaseModel):

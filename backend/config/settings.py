@@ -1,7 +1,8 @@
-from pydantic_settings import BaseSettings
-from typing import List
-from pydantic import field_validator, model_validator
 from urllib.parse import quote_plus
+
+from pydantic import field_validator, model_validator
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Learning Assistant"
@@ -27,7 +28,7 @@ class Settings(BaseSettings):
 
     @field_validator("ALLOWED_ORIGINS")
     @classmethod
-    def parse_allowed_origins(cls, v: str) -> List[str]:
+    def parse_allowed_origins(cls, v: str) -> list[str]:
         return v.split(",") if v else []
 
     @model_validator(mode="after")

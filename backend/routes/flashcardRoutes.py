@@ -14,17 +14,16 @@ from fastapi import APIRouter, Depends
 from middleware.auth import get_current_user
 from models.user import User
 from schemas.flashcard import (
+	FlashcardReviewResponse,
 	FlashcardSetDeleteResponse,
 	FlashcardSetDetailResponse,
 	FlashcardSetGenerateRequest,
 	FlashcardSetOverviewsResponse,
 	FlashcardSetsListResponse,
-	FlashcardReviewResponse,
 	FlashcardToggleStarResponse,
 )
 from sqlalchemy.orm import Session
 from starlette import status
-
 
 db_dependency = Annotated[Session, Depends(get_db)]
 current_user_dependency = Annotated[User, Depends(get_current_user)]

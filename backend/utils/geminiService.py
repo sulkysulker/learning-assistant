@@ -1,10 +1,8 @@
 import json
 import re
 
-from google import genai
-
 from config.settings import settings
-
+from google import genai
 
 FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash-lite"]
 JSON_CODE_FENCE_RE = re.compile(r"```(?:json)?\s*([\s\S]*?)```", re.IGNORECASE)
@@ -145,7 +143,7 @@ def generate_flashcards(document_title: str, document_context: str, count: int) 
 		data = data["flashcards"]
 
 	if not isinstance(data, list):
-		raise ValueError("AI flashcard response must be a JSON array")
+		raise TypeError("AI flashcard response must be a JSON array")
 
 	return data[:count]
 
@@ -172,6 +170,6 @@ def generate_quiz_questions(document_title: str, document_context: str, count: i
 		data = data["questions"]
 
 	if not isinstance(data, list):
-		raise ValueError("AI quiz response must be a JSON array")
+		raise TypeError("AI quiz response must be a JSON array")
 
 	return data[:count]

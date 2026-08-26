@@ -1,8 +1,7 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 from pypdf import PdfReader
-
 
 SURROGATE_RE = re.compile(r"[\ud800-\udfff]")
 

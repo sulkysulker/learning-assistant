@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import re
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -12,8 +12,6 @@ from models.userActivity import UserActivity
 from sqlalchemy.orm import Session
 from utils.geminiService import generate_quiz_questions
 from utils.pdfParser import extract_pdf_text
-from utils.textChunker import select_relevant_chunks
-
 
 SURROGATE_RE = re.compile(r"[\ud800-\udfff]")
 MAX_CONTEXT_CHARS = 30000
@@ -71,7 +69,7 @@ def _ensure_document_text(db: Session, document: Document) -> str:
 		try:
 			db.commit()
 			db.refresh(document)
-		except Exception:
+		except Exception:  # noqa: BLE001
 			db.rollback()
 			document.extracted_text = extracted_text
 
@@ -330,7 +328,7 @@ def _build_result_payload(quiz: Quiz, questions: list[QuizQuestion], attempt: Qu
 
 	num_questions = len(questions)
 	incorrect_count = max(0, num_questions - correct_count)
-	percentage = int(round((correct_count / num_questions) * 100)) if num_questions else 0
+	percentage = round((correct_count / num_questions) * 100) if num_questions else 0
 
 	return {
 		"id": str(quiz.id),

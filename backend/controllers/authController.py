@@ -1,14 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
+from config.settings import settings
 from fastapi import HTTPException
 from jose import jwt
 from models.user import User
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
-
-from config.settings import settings
 from schemas.auth import LoginSchema, RegisterSchema
+from sqlalchemy.orm import Session
 
 bcrypt_context = CryptContext(
     schemes=["bcrypt_sha256"],
