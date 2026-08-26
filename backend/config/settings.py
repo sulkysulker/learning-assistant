@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import List
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
+from urllib.parse import quote_plus
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Learning Assistant"
@@ -8,7 +9,12 @@ class Settings(BaseSettings):
     API_PREFIX: str = '/api'
     DEBUG: bool = False
 
-    DATABASE_URL: str
+    DB_HOST: str = "db"
+    DB_PORT: int = 5432
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "postgres"
+    DB_NAME: str = "learning_assistant"
+    DATABASE_URL: str = ""
 
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
@@ -23,6 +29,15 @@ class Settings(BaseSettings):
     @classmethod
     def parse_allowed_origins(cls, v: str) -> List[str]:
         return v.split(",") if v else []
+
+    @model_validator(mode="after")
+    def build_database_url(self):
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = (
+                f"postgresql+psycopg2://{quote_plus(self.DB_USER)}:{quote_plus(self.DB_PASSWORD)}"
+                f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+            )
+        return self
 
     class Config:
         env_file = ".env"
