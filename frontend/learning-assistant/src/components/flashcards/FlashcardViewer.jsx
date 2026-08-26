@@ -61,7 +61,7 @@ const FlashcardViewer = ({ flashcardSet, onBack, onDeleteSet, backLabel = 'Back 
 		setCards(Array.isArray(flashcardSet?.cards) ? flashcardSet.cards : [])
 		setReviewedCardIds(Array.isArray(flashcardSet?.reviewed_card_ids) ? flashcardSet.reviewed_card_ids : [])
 		setReviewAttemptedCardIds(Array.isArray(flashcardSet?.reviewed_card_ids) ? flashcardSet.reviewed_card_ids : [])
-	}, [flashcardSet?.id])
+	}, [flashcardSet?.id, flashcardSet?.cards, flashcardSet?.reviewed_card_ids])
 
 	useEffect(() => {
 		if (!autoAdvance || !isFlipped || totalCards < 2) {
@@ -118,7 +118,7 @@ const FlashcardViewer = ({ flashcardSet, onBack, onDeleteSet, backLabel = 'Back 
 		return () => {
 			mounted = false
 		}
-	}, [currentCard, isFlipped, isCurrentCardReviewed, onReviewed, reviewingCardId])
+	}, [currentCard, isFlipped, isCurrentCardReviewed, onReviewed, reviewingCardId, reviewAttemptedCardIds])
 
 	const goToPreviousCard = () => {
 		if (!totalCards) {
