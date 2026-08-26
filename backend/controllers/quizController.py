@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
 from models.document import Document
 from models.quiz import Quiz, QuizAttempt, QuizQuestion
 from models.user import User
 from models.userActivity import UserActivity
-from sqlalchemy.orm import Session
 from utils.geminiService import generate_quiz_questions
 from utils.pdfParser import extract_pdf_text
 
@@ -64,7 +65,7 @@ def _ensure_document_text(db: Session, document: Document) -> str:
 			raise HTTPException(status_code=400, detail="Could not extract text from this PDF")
 
 		document.extracted_text = extracted_text
-		document.extracted_text_cached_at = datetime.now(timezone.utc)
+		document.extracted_text_cached_at = datetime.now(UTC)
 		db.add(document)
 		try:
 			db.commit()

@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import HTTPException
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from models.document import Document
 from models.flashcard import Flashcard, FlashcardReview, FlashcardSet
 from models.user import User
 from models.userActivity import UserActivity
-from sqlalchemy import func
-from sqlalchemy.orm import Session
 from utils.geminiService import generate_flashcards
 from utils.pdfParser import extract_pdf_text
 
@@ -51,7 +52,7 @@ def _ensure_document_text(db: Session, document: Document) -> str:
 			raise HTTPException(status_code=400, detail="Could not extract text from this PDF")
 
 		document.extracted_text = extracted_text
-		document.extracted_text_cached_at = datetime.now(timezone.utc)
+		document.extracted_text_cached_at = datetime.now(UTC)
 		db.add(document)
 		try:
 			db.commit()
@@ -208,7 +209,7 @@ def mark_flashcard_reviewed(db: Session, current_user: User, card_id: str) -> di
 		.filter(FlashcardReview.user_id == current_user.id, FlashcardReview.flashcard_id == card.id)
 		.first()
 	)
-	reviewed_at = datetime.now(timezone.utc)
+	reviewed_at = datetime.now(UTC)
 	if review:
 		review.reviewed_at = reviewed_at
 	else:

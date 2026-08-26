@@ -1,8 +1,9 @@
 import uuid
 
-from config.db import Base
 from sqlalchemy import Column, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
+
+from config.db import Base
 
 
 class UserActivity(Base):

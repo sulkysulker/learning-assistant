@@ -1,8 +1,9 @@
 import json
 import re
 
-from config.settings import settings
 from google import genai
+
+from config.settings import settings
 
 FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash-lite"]
 JSON_CODE_FENCE_RE = re.compile(r"```(?:json)?\s*([\s\S]*?)```", re.IGNORECASE)

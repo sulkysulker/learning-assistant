@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
 
-from config.db import create_tables
-from config.settings import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
+from config.db import create_tables
+from config.settings import settings
 from middleware.errorHandler import global_exception_handler
 from models.document import Document  # noqa: F401
 from models.flashcard import Flashcard, FlashcardReview, FlashcardSet  # noqa: F401

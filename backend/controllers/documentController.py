@@ -1,18 +1,19 @@
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from pypdf import PdfReader
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from models.document import Document
 from models.flashcard import FlashcardSet
 from models.quiz import Quiz, QuizAttempt, QuizQuestion
 from models.user import User
 from models.userActivity import UserActivity
-from pypdf import PdfReader
-from sqlalchemy import func
-from sqlalchemy.orm import Session
 from utils.geminiService import generate_grounded_answer
 from utils.pdfParser import extract_pdf_text
 from utils.textChunker import select_relevant_chunks
@@ -147,7 +148,7 @@ def chat_with_document(db: Session, current_user: User, document_id: str, messag
 			raise HTTPException(status_code=400, detail="Could not extract text from this PDF")
 
 		document.extracted_text = extracted_text
-		document.extracted_text_cached_at = datetime.now(timezone.utc)
+		document.extracted_text_cached_at = datetime.now(UTC)
 		db.add(document)
 		try:
 			db.commit()
@@ -214,7 +215,7 @@ def summarize_document(db: Session, current_user: User, document_id: str) -> dic
 			raise HTTPException(status_code=400, detail="Could not extract text from this PDF")
 
 		document.extracted_text = extracted_text
-		document.extracted_text_cached_at = datetime.now(timezone.utc)
+		document.extracted_text_cached_at = datetime.now(UTC)
 		db.add(document)
 		try:
 			db.commit()
@@ -277,7 +278,7 @@ def explain_concept(db: Session, current_user: User, document_id: str, concept: 
 			raise HTTPException(status_code=400, detail="Could not extract text from this PDF")
 
 		document.extracted_text = extracted_text
-		document.extracted_text_cached_at = datetime.now(timezone.utc)
+		document.extracted_text_cached_at = datetime.now(UTC)
 		db.add(document)
 		try:
 			db.commit()

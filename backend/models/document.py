@@ -1,8 +1,9 @@
 import uuid
 
-from config.db import Base
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
+
+from config.db import Base
 
 
 class Document(Base):

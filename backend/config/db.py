@@ -1,6 +1,7 @@
-from config.settings import settings
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
+
+from config.settings import settings
 
 engine=create_engine(settings.DATABASE_URL, pool_pre_ping=True)
 

@@ -1,6 +1,5 @@
 import uuid
 
-from config.db import Base
 from sqlalchemy import (
 	Boolean,
 	Column,
@@ -13,6 +12,8 @@ from sqlalchemy import (
 	text,
 )
 from sqlalchemy.dialects.postgresql import UUID
+
+from config.db import Base
 
 
 class FlashcardSet(Base):

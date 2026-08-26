@@ -1,7 +1,11 @@
 from typing import Annotated
 
-from config.db import get_db
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+from starlette import status
+
+from config.db import get_db
 from middleware.auth import get_current_user
 from models.document import Document
 from models.flashcard import FlashcardSet
@@ -9,9 +13,6 @@ from models.quiz import QuizAttempt
 from models.user import User
 from models.userActivity import UserActivity
 from schemas.dashboard import DashboardActivitiesResponse, DashboardStatsResponse
-from sqlalchemy import func
-from sqlalchemy.orm import Session
-from starlette import status
 
 db_dependency = Annotated[Session, Depends(get_db)]
 current_user_dependency = Annotated[User, Depends(get_current_user)]

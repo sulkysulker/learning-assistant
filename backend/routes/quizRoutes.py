@@ -1,5 +1,9 @@
 from typing import Annotated
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from starlette import status
+
 from config.db import get_db
 from controllers.quizController import (
 	delete_quiz,
@@ -9,7 +13,6 @@ from controllers.quizController import (
 	list_document_quizzes,
 	submit_quiz,
 )
-from fastapi import APIRouter, Depends
 from middleware.auth import get_current_user
 from models.user import User
 from schemas.quiz import (
@@ -20,8 +23,6 @@ from schemas.quiz import (
 	QuizResultResponse,
 	QuizSubmitRequest,
 )
-from sqlalchemy.orm import Session
-from starlette import status
 
 db_dependency = Annotated[Session, Depends(get_db)]
 current_user_dependency = Annotated[User, Depends(get_current_user)]

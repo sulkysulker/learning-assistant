@@ -1,13 +1,14 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from config.settings import settings
 from fastapi import HTTPException
 from jose import jwt
-from models.user import User
 from passlib.context import CryptContext
-from schemas.auth import LoginSchema, RegisterSchema
 from sqlalchemy.orm import Session
+
+from config.settings import settings
+from models.user import User
+from schemas.auth import LoginSchema, RegisterSchema
 
 bcrypt_context = CryptContext(
     schemes=["bcrypt_sha256"],
@@ -17,7 +18,7 @@ bcrypt_context = CryptContext(
 
 def create_access_token(subject: str) -> str:
     expires_delta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    expires_at = datetime.now(timezone.utc) + expires_delta
+    expires_at = datetime.now(UTC) + expires_delta
     payload = {"sub": subject, "exp": expires_at}
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 

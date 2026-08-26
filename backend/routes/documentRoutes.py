@@ -1,5 +1,9 @@
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
+from sqlalchemy.orm import Session
+from starlette import status
+
 from config.db import get_db
 from controllers.documentController import (
 	chat_with_document,
@@ -11,7 +15,6 @@ from controllers.documentController import (
 	summarize_document,
 	upload_document,
 )
-from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from middleware.auth import get_current_user, get_user_from_token
 from models.user import User
 from schemas.document import (
@@ -25,8 +28,6 @@ from schemas.document import (
 	DocumentsListResponse,
 	DocumentSummarizeResponse,
 )
-from sqlalchemy.orm import Session
-from starlette import status
 
 db_dependency = Annotated[Session, Depends(get_db)]
 current_user_dependency = Annotated[User, Depends(get_current_user)]
