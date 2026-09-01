@@ -28,6 +28,11 @@ class LoginSchema(BaseModel):
     password: SecretStr
 
 
+class PasswordChangeSchema(BaseModel):
+    current_password: SecretStr
+    new_password: SecretStr = Field(..., min_length=8)
+
+
 class RegisterResponse(BaseModel):
     username: str
     email: EmailStr

@@ -17,6 +17,7 @@ from routes import (
     documentRoutes,
     flashcardRoutes,
     quizRoutes,
+    userRoutes,
 )
 
 
@@ -53,6 +54,7 @@ app.include_router(flashcardRoutes.flashcards_router,prefix=settings.API_PREFIX)
 app.include_router(flashcardRoutes.set_router,prefix=settings.API_PREFIX)
 app.include_router(quizRoutes.router,prefix=settings.API_PREFIX)
 app.include_router(quizRoutes.quiz_router,prefix=settings.API_PREFIX)
+app.include_router(userRoutes.router,prefix=settings.API_PREFIX)
 
 @app.get("/")
 def root():

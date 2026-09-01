@@ -4,6 +4,9 @@ export const API_PATHS = {
 		LOGIN: '/auth/login',
 		ME: '/auth/me',
 	},
+	USERS: {
+		PASSWORD: '/users/me/password',
+	},
 	DASHBOARD: {
 		STATS: '/dashboard/stats',
 		ACTIVITIES: '/dashboard/activities',

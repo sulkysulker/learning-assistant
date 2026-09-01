@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from config.settings import settings
 from models.user import User
-from schemas.auth import LoginSchema, RegisterSchema
+from schemas.auth import LoginSchema, PasswordChangeSchema, RegisterSchema
 
 bcrypt_context = CryptContext(
     schemes=["bcrypt_sha256"],
@@ -63,6 +63,17 @@ def get_user_by_id(db: Session, user_id: str) -> User | None:
         return None
 
     return db.query(User).filter(User.id == parsed_user_id).first()
+
+
+def change_password(db: Session, user: User, password_data: PasswordChangeSchema) -> None:
+    current_password = password_data.current_password.get_secret_value()
+    new_password = password_data.new_password.get_secret_value()
+
+    if not bcrypt_context.verify(current_password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    user.hashed_password = bcrypt_context.hash(new_password)
+    db.commit()
 
     
 

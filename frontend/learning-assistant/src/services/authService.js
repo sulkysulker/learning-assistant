@@ -23,3 +23,7 @@ export const getMyProfile = async () => {
 	const response = await axiosInstance.get(API_PATHS.AUTH.ME)
 	return response.data
 }
+
+export const changePassword = async (payload) => {
+	await axiosInstance.patch(API_PATHS.USERS.PASSWORD, payload)
+}
