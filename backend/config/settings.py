@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str
     GEMINI_MODEL: str = "gemini-2.5-flash"
 
-    ALLOWED_ORIGINS: str = ""
+    ALLOWED_ORIGINS: str = "http://localhost:5173"
 
     @field_validator("ALLOWED_ORIGINS")
     @classmethod
