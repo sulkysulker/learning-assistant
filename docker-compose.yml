@@ -37,7 +37,7 @@ services:
     build:
       context: ./frontend/learning-assistant
       args:
-        VITE_API_BASE_URL: /api
+        VITE_API_BASE_URL: http://localhost:8000/api
     restart: unless-stopped
     depends_on:
       - backend
