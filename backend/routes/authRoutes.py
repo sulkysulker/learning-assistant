@@ -1,12 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from starlette import status
 
 from config.db import get_db
 from controllers.authController import login_user, register_user
+from main import limiter
 from middleware.auth import get_current_user
 from models.user import User
 from schemas.auth import AuthResponse, LoginSchema, RegisterSchema, UserResponse
@@ -23,7 +24,8 @@ router=APIRouter(
 # public routes
 
 @router.post('/register', response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
-def create_user(db: db_dependency, new_user: RegisterSchema):
+@limiter.limit('3/minute')
+def create_user(request: Request, db: db_dependency, new_user: RegisterSchema):
     created_user, token = register_user(db, new_user)
     return {
         "access_token": token,
@@ -38,7 +40,8 @@ def create_user(db: db_dependency, new_user: RegisterSchema):
 
 
 @router.post('/login', response_model=AuthResponse, status_code=status.HTTP_200_OK)
-def login(db: db_dependency, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+@limiter.limit('5/minute')
+def login(request: Request, db: db_dependency, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     credentials = LoginSchema(username=form_data.username, password=form_data.password)
     user, token = login_user(db, credentials)
     return {

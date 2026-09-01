@@ -3,6 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from config.db import create_tables
 from config.settings import settings
@@ -11,6 +15,9 @@ from models.document import Document  # noqa: F401
 from models.flashcard import Flashcard, FlashcardReview, FlashcardSet  # noqa: F401
 from models.quiz import Quiz, QuizAttempt, QuizQuestion  # noqa: F401
 from models.userActivity import UserActivity  # noqa: F401
+
+limiter = Limiter(key_func=get_remote_address)
+
 from routes import (
     authRoutes,
     dashboardRoutes,
@@ -32,6 +39,17 @@ app = FastAPI(
     version=settings.VERSION,
     lifespan=lifespan,
 )
+
+
+async def rate_limit_exceeded_handler(request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Too many requests, please try again later"},
+    )
+
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 
 app.add_middleware(
