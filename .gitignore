@@ -12,3 +12,5 @@ frontend/learning-assistant/node_modules/
 frontend/learning-assistant/dist/
 frontend/learning-assistant/dist-ssr/
 frontend/learning-assistant/*.local
+
+/ARCHITECTURE.md
